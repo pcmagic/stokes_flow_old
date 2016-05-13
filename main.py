@@ -40,3 +40,4 @@ pointsToVTK("./surfaceForce", nodes[:, 0], nodes[:, 1], nodes[:, 2], \
                   "force_z": force_z, \
                   "force_total": force_total})
 
+print("")
