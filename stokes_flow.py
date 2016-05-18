@@ -5,7 +5,7 @@ import copy
 
 import numpy as np
 import scipy.io as sio
-from evtk.hl import pointsToVTK
+from evtk.hl import pointsToVTK, gridToVTK
 from petsc4py import PETSc
 
 from sf_error import sf_error
@@ -27,12 +27,14 @@ class StokesFlowComponent:
         self.__obj_list = []  # contain objects
         self.__n_obj = 0  # number of objects.
         self.__method = ' '  # solving method,
+        self.__kwargs = {}  # kwargs associate with solving method,
         self.__force = np.nan  # force information
         self.__velocity = np.nan  # velocity information
         self.__node_index_list = []  # list of node index for objs. IMPORTANT: only store first index of objs.
         self.__para_index_list = []  # list of force index for objs. IMPORTANT: only store first index of objs.
         self.__M = np.ndarray([0, 0])  # M matrix
         self.__dimention = -1  # 2 dimention or 3 dimention
+        self.__finish_solve = False
 
     def add_obj(self, obj):
         """
@@ -66,6 +68,7 @@ class StokesFlowComponent:
         # set method.
         self.__method = method
         self.check_args_dict[method](**kwargs)
+        self.__kwargs = kwargs
 
         # processing node and force index lists.
         self.__node_index_list.append(0)
@@ -110,10 +113,15 @@ class StokesFlowComponent:
         ksp.solve(pc_velocity, pc_force)
         self.__force = pc_force.getArray()
         for i, obj in enumerate(self.__obj_list):
-            obj.set_force(self.__force[self.__para_index_list[i]:self.__para_index_list[i+1]])
-
+            obj.set_force(self.__force[self.__para_index_list[i]:self.__para_index_list[i + 1]])
+        self.__finish_solve = True
 
     def vtk_force(self, filename):
+        if not (self.__finish_solve):
+            ierr = 305
+            err_msg = 'call solve() method first. '
+            raise sf_error(ierr, err_msg)
+
         force_x = self.__force[0::3].ravel()
         force_y = self.__force[1::3].ravel()
         force_z = self.__force[2::3].ravel()
@@ -135,9 +143,69 @@ class StokesFlowComponent:
                           "velocity_z": velocity_z,
                           "velocity_total": velocity_total})
         del force_x, force_y, force_z, force_total, \
-            velocity_x, velocity_y, velocity_z, velocity_total,\
+            velocity_x, velocity_y, velocity_z, velocity_total, \
             nodes
 
+    def vtk_velocity(self, filename: str,
+                     field_range: np.ndarray,
+                     n_grid: np.ndarray):
+        """
+
+        :type self: StokesFlowComponent
+        :param self: self
+        :type filename: str
+        :param filename: output file name.
+        :type: range: np.array
+        :param range: range of output velocity field.
+        """
+
+        n_range = field_range.shape
+        if n_range[0] > n_range[1]:
+            field_range = field_range.transpose()
+            n_range = field_range.shape
+        if n_range != (2, 3):
+            ierr = 310
+            err_msg = 'maximum and minimum coordinates for the rectangular velocity field are necessary, ' + \
+                      'i.e. range = [[0,0,0],[10,10,10]]. '
+            raise sf_error(ierr, err_msg)
+        if not (self.__finish_solve):
+            ierr = 305
+            err_msg = 'call solve() method first. '
+            raise sf_error(ierr, err_msg)
+        # set method.
+        method = self.__method
+        kwargs = self.__kwargs
+
+        n_grid = n_grid.ravel()
+        if n_grid.shape != (3,):
+            ierr = 311
+            err_msg = 'mesh number of each axis for the rectangular velocity field is necessary, ' + \
+                      'i.e. n_grid = [100, 100, 100]. '
+            raise sf_error(ierr, err_msg)
+
+        min_range = np.min(field_range, 0)
+        max_range = np.max(field_range, 0)
+        n_node = n_grid[0] * n_grid[1] * n_grid[2]
+        n_para = 3 * n_node
+        full_region_x = np.linspace(min_range[0], max_range[0], n_grid[0])
+        full_region_y = np.linspace(min_range[1], max_range[1], n_grid[1])
+        full_region_z = np.linspace(min_range[2], max_range[2], n_grid[2])
+        [temp_x, temp_y, temp_z] = np.meshgrid(full_region_x, full_region_y, full_region_z)
+        velocity_nodes = np.c_[temp_x.ravel(), temp_y.ravel(), temp_z.ravel()]
+        # create matrix
+        m = np.ndarray([n_para, self.__para_index_list[-1]])
+        for i, obj1 in enumerate(self.__obj_list):
+            force_nodes = obj1.get_nodes()
+            force_index_begin = self.__para_index_list[i]
+            force_index_end = self.__para_index_list[i + 1]
+            m[0:n_para, force_index_begin:force_index_end] \
+                = self.method_dict[method](velocity_nodes, force_nodes, **kwargs)
+        u = np.dot(m, self.__force)
+        u_x = u[0::3].ravel().reshape(n_grid, order='A')
+        u_y = u[1::3].ravel().reshape(n_grid, order='A')
+        u_z = u[2::3].ravel().reshape(n_grid, order='A')
+        gridToVTK(filename, temp_x, temp_y, temp_z,
+                  cellData={"velocity": (u_x, u_y, u_z)})
 
 
 class StokesFlowObject:
@@ -203,6 +271,7 @@ class StokesFlowObject:
         :param new_index: object index
         """
         obj2 = copy.deepcopy(self)
+        obj2.set_index(-1)
         return obj2
 
     def get_index(self):
