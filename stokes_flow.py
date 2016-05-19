@@ -13,8 +13,10 @@ from sf_error import sf_error
 
 class StokesFlowComponent:
     import StokesFlowMethod
-    method_dict = {'rs': StokesFlowMethod.regularized_stokeslets_matrix_3d}
-    check_args_dict = {'rs': StokesFlowMethod.check_regularized_stokeslets_matrix_3d}
+    method_dict = {'rs': StokesFlowMethod.regularized_stokeslets_matrix_3d,
+                   'sf': StokesFlowMethod.surface_force_matrix_3d}
+    check_args_dict = {'rs': StokesFlowMethod.check_regularized_stokeslets_matrix_3d,
+                       'sf': StokesFlowMethod.check_surface_force_matrix_3d}
 
     # try:
     #     self.__method = method_dict[method]
@@ -183,6 +185,7 @@ class StokesFlowComponent:
                       'i.e. n_grid = [100, 100, 100]. '
             raise sf_error(ierr, err_msg)
 
+        # solve velocity at cell center.
         min_range = np.min(field_range, 0)
         max_range = np.max(field_range, 0)
         n_node = n_grid[0] * n_grid[1] * n_grid[2]
@@ -190,9 +193,8 @@ class StokesFlowComponent:
         full_region_x = np.linspace(min_range[0], max_range[0], n_grid[0])
         full_region_y = np.linspace(min_range[1], max_range[1], n_grid[1])
         full_region_z = np.linspace(min_range[2], max_range[2], n_grid[2])
-        [temp_x, temp_y, temp_z] = np.meshgrid(full_region_x, full_region_y, full_region_z)
+        [temp_x, temp_y, temp_z] = np.meshgrid(full_region_x, full_region_y, full_region_z, indexing='ij')
         velocity_nodes = np.c_[temp_x.ravel(), temp_y.ravel(), temp_z.ravel()]
-        # create matrix
         m = np.ndarray([n_para, self.__para_index_list[-1]])
         for i, obj1 in enumerate(self.__obj_list):
             force_nodes = obj1.get_nodes()
@@ -204,6 +206,13 @@ class StokesFlowComponent:
         u_x = u[0::3].ravel().reshape(n_grid, order='A')
         u_y = u[1::3].ravel().reshape(n_grid, order='A')
         u_z = u[2::3].ravel().reshape(n_grid, order='A')
+
+        # output data
+        delta = (max_range - min_range) / n_grid
+        full_region_x = np.linspace(min_range[0] - delta[0] / 2, max_range[0] + delta[0] / 2, n_grid[0] + 1)
+        full_region_y = np.linspace(min_range[1] - delta[1] / 2, max_range[1] + delta[1] / 2, n_grid[1] + 1)
+        full_region_z = np.linspace(min_range[2] - delta[2] / 2, max_range[2] + delta[2] / 2, n_grid[2] + 1)
+        [temp_x, temp_y, temp_z] = np.meshgrid(full_region_x, full_region_y, full_region_z, indexing='ij')
         gridToVTK(filename, temp_x, temp_y, temp_z,
                   cellData={"velocity": (u_x, u_y, u_z)})
 

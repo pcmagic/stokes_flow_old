@@ -3,12 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="ba96a3ea-33f0-4983-b430-a65b0cd93622" name="Default" comment="">
       <change type="DELETED" beforePath="$PROJECT_DIR$/Error.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/helixInforSurface.vtu" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/structured.vts" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/surfaceForce.vtu" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helixInfor.mat" afterPath="$PROJECT_DIR$/helixInfor.mat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helixInfor_large.mat" afterPath="$PROJECT_DIR$/helixInfor_large.mat" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helixInforForce.vtu" afterPath="$PROJECT_DIR$/helixInforForce.vtu" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/helixInforVelocity.vts" afterPath="$PROJECT_DIR$/helixInforVelocity.vts" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/matlab_version/mainRegularizedStokeslets2D.m" afterPath="$PROJECT_DIR$/matlab_version/mainRegularizedStokeslets2D.m" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/StokesFlowMethod.py" afterPath="$PROJECT_DIR$/StokesFlowMethod.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.py" afterPath="$PROJECT_DIR$/main.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/matlab_version/showGeneralCase.m" afterPath="$PROJECT_DIR$/matlab_version/showGeneralCase.m" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/matlab_version/mainStokeslets3D.m" afterPath="$PROJECT_DIR$/matlab_version/mainStokeslets3D.m" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stokes_flow.py" afterPath="$PROJECT_DIR$/stokes_flow.py" />
     </list>
     <ignored path="stokes_flow.iws" />
@@ -30,11 +34,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="17" column="29" selection-start-line="17" selection-start-column="29" selection-end-line="17" selection-end-column="29" />
+            <state relative-caret-position="660">
+              <caret line="44" column="0" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="0" />
               <folding>
                 <element signature="e#107#125#0" expanded="true" />
               </folding>
@@ -45,39 +49,29 @@
       <file leaf-file-name="stokes_flow.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/stokes_flow.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="380">
-              <caret line="205" column="56" selection-start-line="205" selection-start-column="56" selection-end-line="205" selection-end-column="56" />
+            <state relative-caret-position="213">
+              <caret line="99" column="0" selection-start-line="99" selection-start-column="0" selection-end-line="99" selection-end-column="0" />
               <folding>
                 <element signature="e#114#125#0" expanded="true" />
-                <element signature="e#1422#1571#1" expanded="true" />
-                <element signature="e#1966#2005#1" expanded="true" />
-                <element signature="e#6107#6345#1" expanded="true" />
-                <element signature="e#8822#9102#1" expanded="true" />
-                <element signature="e#9672#9721#0" expanded="false" />
-                <element signature="e#9772#9992#1" expanded="true" />
-                <element signature="e#10707#10818#1" expanded="true" />
-                <element signature="e#10935#10954#0" expanded="false" />
-                <element signature="e#11000#11024#0" expanded="false" />
+                <element signature="e#1566#1715#1" expanded="true" />
+                <element signature="e#2110#2149#1" expanded="true" />
+                <element signature="e#6251#6489#1" expanded="true" />
+                <element signature="e#9504#9784#1" expanded="true" />
+                <element signature="e#10354#10403#0" expanded="false" />
+                <element signature="e#10454#10674#1" expanded="true" />
+                <element signature="e#11389#11500#1" expanded="true" />
+                <element signature="e#11617#11636#0" expanded="false" />
+                <element signature="e#11682#11706#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="hl.py" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/anaconda3/envs/obenv/lib/python3.5/site-packages/evtk/hl.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="738">
-              <caret line="187" column="24" selection-start-line="187" selection-start-column="24" selection-end-line="187" selection-end-column="24" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="StokesFlowMethod.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="StokesFlowMethod.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/StokesFlowMethod.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="31">
-              <caret line="5" column="40" selection-start-line="5" selection-start-column="40" selection-end-line="5" selection-end-column="40" />
+            <state relative-caret-position="146">
+              <caret line="51" column="11" selection-start-line="51" selection-start-column="11" selection-end-line="51" selection-end-column="11" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -88,7 +82,7 @@
       <file leaf-file-name="numpy_io.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/numpy_io.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
+            <state relative-caret-position="225">
               <caret line="15" column="35" selection-start-line="15" selection-start-column="35" selection-end-line="15" selection-end-column="35" />
               <folding>
                 <marker date="1463114384580" expanded="true" signature="113:173" placeholder="..." />
@@ -135,9 +129,9 @@
         <option value="$PROJECT_DIR$/sf_error.py" />
         <option value="$PROJECT_DIR$/StokesFlowObject.py" />
         <option value="$PROJECT_DIR$/StokesFlowComponent.py" />
-        <option value="$PROJECT_DIR$/StokesFlowMethod.py" />
         <option value="$PROJECT_DIR$/stokes_flow.py" />
         <option value="$PROJECT_DIR$/main.py" />
+        <option value="$PROJECT_DIR$/StokesFlowMethod.py" />
       </list>
     </option>
   </component>
@@ -206,10 +200,10 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane />
       </pane>
+      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -434,14 +428,14 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-3" y="232" width="1926" height="1215" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24986821" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" show_stripe_button="true" weight="0.3295238" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" x="431" y="1072" width="634" height="328" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32096475" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32931355" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32931355" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32931355" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24986821" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32931355" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -471,8 +465,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>45</line>
-          <option name="timeStamp" value="147" />
+          <line>56</line>
+          <option name="timeStamp" value="152" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/StokesFlowMethod.py</url>
+          <line>67</line>
+          <option name="timeStamp" value="157" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -482,7 +481,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="148" />
+      <option name="time" value="158" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -518,15 +517,15 @@
           <caret line="15" column="0" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
           <folding>
             <element signature="e#114#125#0" expanded="true" />
-            <element signature="e#1422#1571#1" expanded="true" />
-            <element signature="e#1966#2005#1" expanded="true" />
-            <element signature="e#6107#6345#1" expanded="true" />
-            <element signature="e#8822#9102#1" expanded="true" />
-            <element signature="e#9672#9721#0" expanded="false" />
-            <element signature="e#9772#9992#1" expanded="true" />
-            <element signature="e#10707#10818#1" expanded="true" />
-            <element signature="e#10935#10954#0" expanded="false" />
-            <element signature="e#11000#11024#0" expanded="false" />
+            <element signature="e#1566#1715#1" expanded="true" />
+            <element signature="e#2110#2149#1" expanded="true" />
+            <element signature="e#6251#6489#1" expanded="true" />
+            <element signature="e#9504#9784#1" expanded="true" />
+            <element signature="e#10354#10403#0" expanded="false" />
+            <element signature="e#10454#10674#1" expanded="true" />
+            <element signature="e#11389#11500#1" expanded="true" />
+            <element signature="e#11617#11636#0" expanded="false" />
+            <element signature="e#11682#11706#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -583,15 +582,15 @@
           <caret line="15" column="0" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
           <folding>
             <element signature="e#114#125#0" expanded="true" />
-            <element signature="e#1422#1571#1" expanded="true" />
-            <element signature="e#1966#2005#1" expanded="true" />
-            <element signature="e#6107#6345#1" expanded="true" />
-            <element signature="e#8822#9102#1" expanded="true" />
-            <element signature="e#9672#9721#0" expanded="false" />
-            <element signature="e#9772#9992#1" expanded="true" />
-            <element signature="e#10707#10818#1" expanded="true" />
-            <element signature="e#10935#10954#0" expanded="false" />
-            <element signature="e#11000#11024#0" expanded="false" />
+            <element signature="e#1566#1715#1" expanded="true" />
+            <element signature="e#2110#2149#1" expanded="true" />
+            <element signature="e#6251#6489#1" expanded="true" />
+            <element signature="e#9504#9784#1" expanded="true" />
+            <element signature="e#10354#10403#0" expanded="false" />
+            <element signature="e#10454#10674#1" expanded="true" />
+            <element signature="e#11389#11500#1" expanded="true" />
+            <element signature="e#11617#11636#0" expanded="false" />
+            <element signature="e#11682#11706#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -649,15 +648,15 @@
           <caret line="15" column="0" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
           <folding>
             <element signature="e#114#125#0" expanded="true" />
-            <element signature="e#1422#1571#1" expanded="true" />
-            <element signature="e#1966#2005#1" expanded="true" />
-            <element signature="e#6107#6345#1" expanded="true" />
-            <element signature="e#8822#9102#1" expanded="true" />
-            <element signature="e#9672#9721#0" expanded="false" />
-            <element signature="e#9772#9992#1" expanded="true" />
-            <element signature="e#10707#10818#1" expanded="true" />
-            <element signature="e#10935#10954#0" expanded="false" />
-            <element signature="e#11000#11024#0" expanded="false" />
+            <element signature="e#1566#1715#1" expanded="true" />
+            <element signature="e#2110#2149#1" expanded="true" />
+            <element signature="e#6251#6489#1" expanded="true" />
+            <element signature="e#9504#9784#1" expanded="true" />
+            <element signature="e#10354#10403#0" expanded="false" />
+            <element signature="e#10454#10674#1" expanded="true" />
+            <element signature="e#11389#11500#1" expanded="true" />
+            <element signature="e#11617#11636#0" expanded="false" />
+            <element signature="e#11682#11706#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -708,15 +707,15 @@
           <caret line="34" column="38" selection-start-line="34" selection-start-column="38" selection-end-line="34" selection-end-column="38" />
           <folding>
             <element signature="e#114#125#0" expanded="true" />
-            <element signature="e#1422#1571#1" expanded="true" />
-            <element signature="e#1966#2005#1" expanded="true" />
-            <element signature="e#6107#6345#1" expanded="true" />
-            <element signature="e#8822#9102#1" expanded="true" />
-            <element signature="e#9672#9721#0" expanded="false" />
-            <element signature="e#9772#9992#1" expanded="true" />
-            <element signature="e#10707#10818#1" expanded="true" />
-            <element signature="e#10935#10954#0" expanded="false" />
-            <element signature="e#11000#11024#0" expanded="false" />
+            <element signature="e#1566#1715#1" expanded="true" />
+            <element signature="e#2110#2149#1" expanded="true" />
+            <element signature="e#6251#6489#1" expanded="true" />
+            <element signature="e#9504#9784#1" expanded="true" />
+            <element signature="e#10354#10403#0" expanded="false" />
+            <element signature="e#10454#10674#1" expanded="true" />
+            <element signature="e#11389#11500#1" expanded="true" />
+            <element signature="e#11617#11636#0" expanded="false" />
+            <element signature="e#11682#11706#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1095,7 +1094,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/numpy_io.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
+        <state relative-caret-position="225">
           <caret line="15" column="35" selection-start-line="15" selection-start-column="35" selection-end-line="15" selection-end-column="35" />
           <folding>
             <marker date="1463114384580" expanded="true" signature="113:173" placeholder="..." />
@@ -1116,6 +1115,14 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/obenv/lib/python3.5/site-packages/evtk/hl.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2130">
+          <caret line="187" column="24" selection-start-line="187" selection-start-column="24" selection-end-line="187" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
@@ -1124,49 +1131,41 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/StokesFlowMethod.py">
+    <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="31">
-          <caret line="5" column="40" selection-start-line="5" selection-start-column="40" selection-end-line="5" selection-end-column="40" />
+        <state relative-caret-position="660">
+          <caret line="44" column="0" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="0" />
           <folding>
-            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#107#125#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/envs/obenv/lib/python3.5/site-packages/evtk/hl.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="738">
-          <caret line="187" column="24" selection-start-line="187" selection-start-column="24" selection-end-line="187" selection-end-column="24" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/stokes_flow.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="380">
-          <caret line="205" column="56" selection-start-line="205" selection-start-column="56" selection-end-line="205" selection-end-column="56" />
+        <state relative-caret-position="213">
+          <caret line="99" column="0" selection-start-line="99" selection-start-column="0" selection-end-line="99" selection-end-column="0" />
           <folding>
             <element signature="e#114#125#0" expanded="true" />
-            <element signature="e#1422#1571#1" expanded="true" />
-            <element signature="e#1966#2005#1" expanded="true" />
-            <element signature="e#6107#6345#1" expanded="true" />
-            <element signature="e#8822#9102#1" expanded="true" />
-            <element signature="e#9672#9721#0" expanded="false" />
-            <element signature="e#9772#9992#1" expanded="true" />
-            <element signature="e#10707#10818#1" expanded="true" />
-            <element signature="e#10935#10954#0" expanded="false" />
-            <element signature="e#11000#11024#0" expanded="false" />
+            <element signature="e#1566#1715#1" expanded="true" />
+            <element signature="e#2110#2149#1" expanded="true" />
+            <element signature="e#6251#6489#1" expanded="true" />
+            <element signature="e#9504#9784#1" expanded="true" />
+            <element signature="e#10354#10403#0" expanded="false" />
+            <element signature="e#10454#10674#1" expanded="true" />
+            <element signature="e#11389#11500#1" expanded="true" />
+            <element signature="e#11617#11636#0" expanded="false" />
+            <element signature="e#11682#11706#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
+    <entry file="file://$PROJECT_DIR$/StokesFlowMethod.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="17" column="29" selection-start-line="17" selection-start-column="29" selection-end-line="17" selection-end-column="29" />
+        <state relative-caret-position="146">
+          <caret line="51" column="11" selection-start-line="51" selection-start-column="11" selection-end-line="51" selection-end-column="11" />
           <folding>
-            <element signature="e#107#125#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>

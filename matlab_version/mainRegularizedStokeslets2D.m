@@ -22,7 +22,7 @@ caseProperty = struct('radius', r,...
   'center', [0,0],...
   'u0', u0);
 
-parfor i0 = 1:nCase
+for i0 = 1:nCase
   deltaS = 2*pi*r/nNode(i0);
   theta = linspace(0,2*pi, nNode(i0));
   nodes = r.*[cos(theta); sin(theta)]';
@@ -57,7 +57,7 @@ figure;
 hold on;
 conv = ones(size(nNode, 2), 1);
 for i0 = 1:size(nNode, 2)
-  DisplayName = ['?=', num2str(eta(1, i0)), '×?s'];
+  DisplayName = ['?=', num2str(eta(1, i0)), 'ï¿½?s'];
   loglog(nNode(:, i0), numErr(:, i0), 'DisplayName', DisplayName);
   p = polyfit(log10nNode(:, i0), log10numErr(:, i0), 1);
   conv(i0) = p(1);

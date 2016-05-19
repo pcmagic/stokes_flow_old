@@ -2,53 +2,53 @@ function mainStokeslets3D()
 % Per process mesh and boundary conditions for Stokeslets3D.m
 
 %-------------------------------------------------------------------------
-% shiftT = 0.8:0.01:0.99;
-% nTracer = 50*(2.^(0:4));
-% n_shiftT = length(shiftT);
-% n_nTracer = length(nTracer);
-% [shiftT, nTracer] = meshgrid(shiftT, nTracer);
-% shiftT =  shiftT(:); nTracer = nTracer(:);
-% nCase = length(shiftT);
-% numErr = zeros(nCase, 1);
-% flag = zeros(nCase, 1);        % properties for GMRES iteration.
-% relres = zeros(nCase, 1);
-% iter = zeros(nCase, 1);
-% iterGMRES = zeros(nCase, 1);
-% figHandle = 'sphereCase_nTracer_shiftT_tfqmr-length(U)';
-%
-% colorDataLim = [0, 1];
-% nFullGrid = [530, 530, 270];
-% tempk = [3, 3, 3];
-% stepQuiver = 4;
-% PaperPosition = 0.5;
-% anlzHandle = @sphereMotionCaseAnlz;
-% geoHandle = @sphereMotionCaseGeometry;
-%
+shiftT = 0.8:0.01:0.99;
+nTracer = 50*(2.^(0:4));
+n_shiftT = length(shiftT);
+n_nTracer = length(nTracer);
+[shiftT, nTracer] = meshgrid(shiftT, nTracer);
+shiftT =  shiftT(:); nTracer = nTracer(:);
+nCase = length(shiftT);
+numErr = zeros(nCase, 1);
+flag = zeros(nCase, 1);        % properties for GMRES iteration.
+relres = zeros(nCase, 1);
+iter = zeros(nCase, 1);
+iterGMRES = zeros(nCase, 1);
+figHandle = 'sphereCase_nTracer_shiftT_tfqmr-length(U)';
+
+colorDataLim = [0, 1];
+nFullGrid = [530, 530, 270];
+tempk = [3, 3, 3];
+stepQuiver = 4;
+PaperPosition = 0.5;
+anlzHandle = @sphereMotionCaseAnlz;
+geoHandle = @sphereMotionCaseGeometry;
+
 % if isempty(gcp('nocreate'))
 %   parpool(24);
 % end
-% % pctRunOnAll javaaddpath java;
-% % ppm = ParforProgMon('Sphere Case: ', nCase, 1, 300, 80);
-% parfor i0 = 1:nCase
-% %   ppm.increment();
-%
-%   %   fprintf(1, 'sphereCase_shiftT%.2e', shiftT(i0));
-%   [nodes, gNodes, U, caseProperty] = sphereMotionCase(shiftT(i0), nTracer(i0));
-% %     fig1 = showProblem(nodes, 'gNodes', gNodes, 'U', U);
-%   M = stokesletMatrix3D(nodes, gNodes);
-% %   [F, flag(i0), relres(i0), iterGMRES(i0,:)] = gmres(M, U, 100, 1e-4, 100);   % Generalized minimal residue method
-%   [F, flag(i0), relres(i0), iter(i0)] = tfqmr(M, U, 1e-6, length(U)*100);   % Transpose-free quasi-minimal residual method
-% %     numErr(i0) = showGeneralCase(nodes, gNodes, F,...
-% %       nFullGrid, tempk, colorDataLim, PaperPosition, figHandle, stepQuiver,...
-% %       geoHandle, caseProperty, anlzHandle);
-%   numErr(i0) = checkError(nodes, gNodes, F, nFullGrid, tempk, caseProperty, anlzHandle);
-% %     if exist('fig1', 'var')
-% %       close(fig1); clear fig1;
-% %     end
-% %     save(['.\', figHandle, '\', figHandle, '.mat']);
-% end
-% % ppm.delete()
-% save(figHandle);
+% pctRunOnAll javaaddpath java;
+% ppm = ParforProgMon('Sphere Case: ', nCase, 1, 300, 80);
+for i0 = 1:nCase
+%   ppm.increment();
+
+  %   fprintf(1, 'sphereCase_shiftT%.2e', shiftT(i0));
+  [nodes, gNodes, U, caseProperty] = sphereMotionCase(shiftT(i0), nTracer(i0));
+%     fig1 = showProblem(nodes, 'gNodes', gNodes, 'U', U);
+  M = stokesletMatrix3D(nodes, gNodes);
+%   [F, flag(i0), relres(i0), iterGMRES(i0,:)] = gmres(M, U, 100, 1e-4, 100);   % Generalized minimal residue method
+  [F, flag(i0), relres(i0), iter(i0)] = tfqmr(M, U, 1e-6, length(U)*100);   % Transpose-free quasi-minimal residual method
+%     numErr(i0) = showGeneralCase(nodes, gNodes, F,...
+%       nFullGrid, tempk, colorDataLim, PaperPosition, figHandle, stepQuiver,...
+%       geoHandle, caseProperty, anlzHandle);
+  numErr(i0) = checkError(nodes, gNodes, F, nFullGrid, tempk, caseProperty, anlzHandle);
+%     if exist('fig1', 'var')
+%       close(fig1); clear fig1;
+%     end
+%     save(['.\', figHandle, '\', figHandle, '.mat']);
+end
+% ppm.delete()
+save(figHandle);
 
 %--------------------------------------------------------------------------
 % shiftT = 0.1:0.05:0.9;
