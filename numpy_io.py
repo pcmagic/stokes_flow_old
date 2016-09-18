@@ -1,11 +1,16 @@
 # Input and output matrix andd array of numpy
 # Zhang Ji, 20160427
+# Example:
+#         import numpy_io as nio
+#         nio.write(velocity, 'velocity.txt')
+#         nio.write(rs_m, 'rs_m.txt')
+#         nio.write(force, 'force.txt')
 
 import numpy as np
 
 
-def write_vector(vector: np.ndarray = 'expressed vector',
-                 file_name: str = 'file name'):
+def write_vector(vector: np.ndarray,
+                 file_name: str):
     # write vector
 
     n_vector = vector.shape
@@ -50,8 +55,8 @@ def write_vector(vector: np.ndarray = 'expressed vector',
     f_vector.close()
 
 
-def write_matrix(matrix: np.ndarray = 'expressed matrix',
-                 file_name: str = 'file name'):
+def write_matrix(matrix: np.ndarray,
+                 file_name: str):
     # write matrix
 
     n_matrix = matrix.shape
@@ -87,8 +92,8 @@ def write_matrix(matrix: np.ndarray = 'expressed matrix',
 
     f_matrix.close()
 
-def write(matrix: np.ndarray = 'expressed entity',
-          file_name: str = 'file name'):
+def write(matrix: np.ndarray,
+          file_name: str):
     # wrapper of write_matrix() and write_vector()
 
     n_matrix = matrix.shape
