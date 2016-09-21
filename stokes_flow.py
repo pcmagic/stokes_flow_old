@@ -7,7 +7,6 @@ import scipy.io as sio
 from evtk.hl import pointsToVTK, gridToVTK
 from petsc4py import PETSc
 from sf_error import sf_error
-from mpi4py import MPI
 
 class StokesFlowComponent:
     import StokesFlowMethod
@@ -33,6 +32,7 @@ class StokesFlowComponent:
         self.__force = np.nan  # force information
         self.__force_petsc = PETSc.Vec().create(comm=PETSc.COMM_WORLD)
         self.__velocity = np.nan  # velocity information
+        self.__re_velocity = np.nan  #check velocity field.
         self.__node_index_list = []  # list of node index for objs. IMPORTANT: only store first index of objs.
         self.__para_index_list = []  # list of force index for objs. IMPORTANT: only store first index of objs.
         self.__M_petsc = PETSc.Mat().create(comm=PETSc.COMM_WORLD)  # M matrix
@@ -123,14 +123,17 @@ class StokesFlowComponent:
         ksp.setOperators(self.__M_petsc)
         ksp.setFromOptions()
         ksp.solve(velocity_petsc, force_petsc)
-        comm = PETSc.COMM_WORLD.tompi4py()
-        rank = comm.Get_rank()
-        scatter, self.__force = PETSc.Scatter.toZero(force_petsc)
+        scatter, self.__force = PETSc.Scatter.toAll(force_petsc)
         scatter.scatter(force_petsc, self.__force, False, PETSc.Scatter.Mode.FORWARD)
         self.__force_petsc = force_petsc
-        if rank == 0:
-            for i, obj in enumerate(self.__obj_list):
-                obj.set_force(self.__force[self.__para_index_list[i]:self.__para_index_list[i + 1]])
+        for i, obj in enumerate(self.__obj_list):
+            obj.set_force(self.__force[self.__para_index_list[i]:self.__para_index_list[i + 1]])
+
+        re_velocity_petsc = self.__M_petsc.createVecLeft()
+        re_velocity_petsc.set(0)
+        self.__M_petsc.mult(force_petsc, re_velocity_petsc)
+        scatter, self.__re_velocity = PETSc.Scatter.toAll(re_velocity_petsc)
+        scatter.scatter(re_velocity_petsc, self.__re_velocity, False, PETSc.Scatter.Mode.FORWARD)
         self.__finish_solve = True
 
     def vtk_force(self, filename):
@@ -141,14 +144,18 @@ class StokesFlowComponent:
         comm = PETSc.COMM_WORLD.tompi4py()
         rank = comm.Get_rank()
         if rank == 0:
-            force_x = self.__force[0::3].ravel()
-            force_y = self.__force[1::3].ravel()
-            force_z = self.__force[2::3].ravel()
+            force_x = self.__force[0::3].copy()
+            force_y = self.__force[1::3].copy()
+            force_z = self.__force[2::3].copy()
             force_total = (force_x ** 2 + force_y ** 2 + force_z ** 2) ** 0.5
-            velocity_x = self.__velocity[0::3].ravel()
-            velocity_y = self.__velocity[1::3].ravel()
-            velocity_z = self.__velocity[2::3].ravel()
+            velocity_x = self.__velocity[0::3].copy()
+            velocity_y = self.__velocity[1::3].copy()
+            velocity_z = self.__velocity[2::3].copy()
+            velocity_err_x = np.abs(self.__re_velocity[0::3] - self.__velocity[0::3])
+            velocity_err_y = np.abs(self.__re_velocity[1::3] - self.__velocity[1::3])
+            velocity_err_z = np.abs(self.__re_velocity[2::3] - self.__velocity[2::3])
             velocity_total = (velocity_x ** 2 + velocity_y ** 2 + velocity_z ** 2) ** 0.5
+            velocity_err_total = (velocity_err_x ** 2 + velocity_err_y ** 2 + velocity_err_z ** 2) ** 0.5
             nodes = np.ones([self.__node_index_list[-1], 3], order='F')
             for i, obj in enumerate(self.__obj_list):
                 nodes[self.__node_index_list[i]:self.__node_index_list[i + 1], :] = obj.get_nodes()
@@ -160,7 +167,11 @@ class StokesFlowComponent:
                               "velocity_x": velocity_x,
                               "velocity_y": velocity_y,
                               "velocity_z": velocity_z,
-                              "velocity_total": velocity_total})
+                              "velocity_total": velocity_total,
+                              "velocity_err_x": velocity_err_x,
+                              "velocity_err_y": velocity_err_y,
+                              "velocity_err_z": velocity_err_z,
+                              "velocity_err_total": velocity_err_total})
             del force_x, force_y, force_z, force_total, \
                 velocity_x, velocity_y, velocity_z, velocity_total, \
                 nodes
@@ -205,50 +216,53 @@ class StokesFlowComponent:
         # solve velocity at cell center.
         min_range = np.min(field_range, 0)
         max_range = np.max(field_range, 0)
-        n_node = n_grid[0] * n_grid[1] * n_grid[2]
+        n_node = n_grid[1] * n_grid[2]
         n_para = 3 * n_node
         full_region_x = np.linspace(min_range[0], max_range[0], n_grid[0])
         full_region_y = np.linspace(min_range[1], max_range[1], n_grid[1])
         full_region_z = np.linspace(min_range[2], max_range[2], n_grid[2])
-        [temp_x, temp_y, temp_z] = np.meshgrid(full_region_x, full_region_y, full_region_z, indexing='ij')
-        velocity_nodes = np.c_[temp_x.ravel(), temp_y.ravel(), temp_z.ravel()]
-        m_petsc = PETSc.Mat().create(comm=PETSc.COMM_WORLD)
-        m_petsc.setSizes(((None, n_para), (None, self.__para_index_list[-1])))
-        m_petsc.setType('dense')
-        m_petsc.setFromOptions()
-        m_petsc.setUp()
-        for i, obj1 in enumerate(self.__obj_list):
-            force_nodes = obj1.get_nodes()
-            force_index_begin = self.__para_index_list[i]
-            force_index_end = self.__para_index_list[i + 1]
-            temp_m_petsc = self.method_dict[method](velocity_nodes, force_nodes, **kwargs)
-            temp_m = temp_m_petsc.getDenseArray()
-            temp_m_start, temp_m_end = temp_m_petsc.getOwnershipRange()
-            for k in range(temp_m_start, temp_m_end):
-                m_petsc.setValues(k, np.arange(force_index_begin, force_index_end, dtype='int32'), temp_m[k-temp_m_start, :])
-        m_petsc.assemble()
-        u_petsc = PETSc.Vec().create(comm=PETSc.COMM_WORLD)
-        u_petsc.setSizes((None, n_para))
-        u_petsc.setType('standard')
-        u_petsc.setFromOptions()
-        u_petsc.setUp()
-        m_petsc.mult(self.__force_petsc, u_petsc)
-
         comm = PETSc.COMM_WORLD.tompi4py()
         rank = comm.Get_rank()
-        scatter, u = PETSc.Scatter.toZero(u_petsc)
-        scatter.scatter(u_petsc, u, False, PETSc.Scatter.Mode.FORWARD)
+
+        # to handle big problem, solve velocity field at every splice along x axis.
+        u_x = np.zeros((n_grid[0], n_grid[1], n_grid[2]))
+        u_y = np.zeros((n_grid[0], n_grid[1], n_grid[2]))
+        u_z = np.zeros((n_grid[0], n_grid[1], n_grid[2]))
+        for i0, current_region_x in enumerate(full_region_x):
+            [temp_x, temp_y, temp_z] = np.meshgrid(current_region_x, full_region_y, full_region_z, indexing='ij')
+            velocity_nodes = np.c_[temp_x.ravel(), temp_y.ravel(), temp_z.ravel()]
+            m_petsc = PETSc.Mat().create(comm=PETSc.COMM_WORLD)
+            m_petsc.setSizes(((None, n_para), (None, self.__para_index_list[-1])))
+            m_petsc.setType('dense')
+            m_petsc.setFromOptions()
+            m_petsc.setUp()
+            for i, obj1 in enumerate(self.__obj_list):
+                force_nodes = obj1.get_nodes()
+                force_index_begin = self.__para_index_list[i]
+                force_index_end = self.__para_index_list[i + 1]
+                temp_m_petsc = self.method_dict[method](velocity_nodes, force_nodes, **kwargs)
+                temp_m = temp_m_petsc.getDenseArray()
+                temp_m_start, temp_m_end = temp_m_petsc.getOwnershipRange()
+                for k in range(temp_m_start, temp_m_end):
+                    m_petsc.setValues(k, np.arange(force_index_begin, force_index_end, dtype='int32'), temp_m[k-temp_m_start, :])
+            m_petsc.assemble()
+            u_petsc = m_petsc.createVecLeft()
+            u_petsc.set(0)
+            m_petsc.mult(self.__force_petsc, u_petsc)
+            scatter, u = PETSc.Scatter.toZero(u_petsc)
+            scatter.scatter(u_petsc, u, False, PETSc.Scatter.Mode.FORWARD)
+            if rank == 0:
+                u_x[i0, :, :] = u[0::3].reshape((1, n_grid[1], n_grid[2]))
+                u_y[i0, :, :] = u[1::3].reshape((1, n_grid[1], n_grid[2]))
+                u_z[i0, :, :] = u[2::3].reshape((1, n_grid[1], n_grid[2]))
+
         if rank == 0:
-            u_x = u[0::3].ravel().reshape(n_grid, order='A')
-            u_y = u[1::3].ravel().reshape(n_grid, order='A')
-            u_z = u[2::3].ravel().reshape(n_grid, order='A')
             # output data
             delta = (max_range - min_range) / n_grid
             full_region_x = np.linspace(min_range[0] - delta[0] / 2, max_range[0] + delta[0] / 2, n_grid[0] + 1)
             full_region_y = np.linspace(min_range[1] - delta[1] / 2, max_range[1] + delta[1] / 2, n_grid[1] + 1)
             full_region_z = np.linspace(min_range[2] - delta[2] / 2, max_range[2] + delta[2] / 2, n_grid[2] + 1)
-            [temp_x, temp_y, temp_z] = np.meshgrid(full_region_x, full_region_y, full_region_z, indexing='ij')
-            gridToVTK(filename, temp_x, temp_y, temp_z,
+            gridToVTK(filename, full_region_x, full_region_y, full_region_z,
                       cellData={"velocity": (u_x, u_y, u_z)})
 
     def saveM(self, filename: str = '..',):
@@ -259,7 +273,7 @@ class StokesFlowComponent:
 
 class StokesFlowObject:
     # general class of object, contain general properties of objcet.
-    def __init__(self, filename: str = '..', index: int = -1):
+    def __init__(self, filename: str = '..'):
         """
          :type filename str
         :param filename: name of mat file containing object information
@@ -300,6 +314,23 @@ class StokesFlowObject:
         self.__force = self.__velocity.copy()
         self.__force.fill(0)
         self.__origin = origin.flatten(1).astype(np.float64)
+        self.__local_nodes = self.__nodes - self.__origin
+        self.__type = 'general obj'
+
+        # TODO: processing value of delta
+        # delta = mat_contents['delta']
+        # delta = delta[0, 0]
+        # return nodes, velocity, delta
+
+    def set_data(self,
+                 nodes: np.array,
+                 velocity: np.array,
+                 origin: np.array = np.array([0, 0, 0])):
+        self.__nodes = nodes
+        self.__velocity = velocity
+        self.__force = self.__velocity.copy()
+        self.__force.fill(0)
+        self.__origin = origin
         self.__local_nodes = self.__nodes - self.__origin
         self.__type = 'general obj'
 

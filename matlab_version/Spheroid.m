@@ -14,7 +14,6 @@ jj = 1:NSpheroid;
 xlocH = -1.0 + 2.0 * (jj - 1)/(NSpheroid - 1);
 numf = 0.5;
 
-mdl(1:NSpheroid) = 1.0;
 prefac = 3.6*sqrt(headC/headA);
 spherephi = ones(1, NSpheroid);
 for ii = 1:NSpheroid
@@ -31,12 +30,6 @@ tsin = sqrt(1-xlocH.^2);
 rxS = headC*xlocH;
 ryS = headA*tsin.*cos(spherephi);
 rzS = headA*tsin.*sin(spherephi);
-
-wgt2 = 1.0 - numf * (1.0 - tsin);
-% wgt2 = 1.0-numf*tsin;
-gxS = rxS.*(1-(1-shift)*wgt2.*mdl/headC);
-gyS = ryS.*(1-(1-shift)*wgt2.*mdl/headA);
-gzS = rzS.*(1-(1-shift)*wgt2.*mdl/headA);
 
 spheroid_str = struct('rxS',rxS,'ryS',ryS,'rzS',rzS,'gxS',gxS,'gyS',gyS,'gzS',gzS);
 end
