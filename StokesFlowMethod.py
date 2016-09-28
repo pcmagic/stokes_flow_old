@@ -2,6 +2,7 @@ import numpy as np
 from petsc4py import PETSc
 from sf_error import sf_error
 from mpi4py import MPI
+import stokes_flow as sf
 
 
 def regularized_stokeslets_matrix_3d(vnodes: np.ndarray,  # nodes contain velocity information
@@ -77,13 +78,15 @@ def regularized_stokeslets_matrix_3d(vnodes: np.ndarray,  # nodes contain veloci
     comm.Gatherv(m_local, [m, split_size_out, split_disp_out, MPI.DOUBLE], root=0)
     return m  # ' regularized stokeslets matrix, U = M * F '
 
-def regularized_stokeslets_matrix_3d_petsc(vnodes: np.ndarray,  # nodes contain velocity information
-                                           fnodes: np.ndarray,  # nodes contain force information
+def regularized_stokeslets_matrix_3d_petsc(obj1: sf.StokesFlowObject,  # objct contain velocity information
+                                           obj2: sf.StokesFlowObject,  # objct contain force information
                                            delta: float):  # correction factor
     # Solve m matrix using regularized stokeslets method
     # U = M * F.
     # Cortez R. The method of regularized Stokeslets[J]. SIAM Journal on Scientific Computing, 2001, 23(4): 1204-1225.
 
+    vnodes = obj1.get_f_nodes()
+    fnodes = obj2.get_f_nodes()
     n_vnode = vnodes.shape
     if n_vnode[0] < n_vnode[1]:
         vnodes = vnodes.transpose()
@@ -98,9 +101,6 @@ def regularized_stokeslets_matrix_3d_petsc(vnodes: np.ndarray,  # nodes contain 
     m.setType('dense')
     m.setFromOptions()
     m.setUp()
-    fnodes_pc, vnodes_pc = m.createVecs()         # F and U vectors in petsc form.
-    fnodes_pc = fnodes.reshape([-1, 1])[:]
-    vnodes_pc = vnodes.reshape([-1, 1])[:]
     m_start, m_end = m.getOwnershipRange()
     for i0 in range(m_start, m_end):
         delta_xi = fnodes - vnodes[i0//3]
@@ -108,7 +108,6 @@ def regularized_stokeslets_matrix_3d_petsc(vnodes: np.ndarray,  # nodes contain 
         delta_2 = np.square(delta)  # delta_2 = e^2
         delta_r2 = temp1.sum(axis=1) + delta_2  # delta_r2 = r^2+e^2
         delta_r3 = delta_r2 * np.sqrt(delta_r2)  # delta_r3 = (r^2+e^2)^1.5
-        temp2 = (delta_r2 + delta_2) / delta_r3  # temp2 = (r^2+2*e^2)/(r^2+e^2)^1.5
         temp2 = (delta_r2 + delta_2) / delta_r3  # temp2 = (r^2+2*e^2)/(r^2+e^2)^1.5
         if i0 % 3 == 0:       # x axis
             m[i0, 0::3] = temp2 + np.square(delta_xi[:, 0]) / delta_r3  # Mxx
@@ -118,7 +117,6 @@ def regularized_stokeslets_matrix_3d_petsc(vnodes: np.ndarray,  # nodes contain 
             m[i0, 0::3] = delta_xi[:, 0] * delta_xi[:, 1] / delta_r3  # Mxy
             m[i0, 1::3] = temp2 + np.square(delta_xi[:, 1]) / delta_r3  # Myy
             m[i0, 2::3] = delta_xi[:, 1] * delta_xi[:, 2] / delta_r3  # Myz
-        # elif i0 % 3 == 2:     # z axis
         else:     # z axis
             m[i0, 0::3] = delta_xi[:, 0] * delta_xi[:, 2] / delta_r3  # Mxz
             m[i0, 1::3] = delta_xi[:, 1] * delta_xi[:, 2] / delta_r3  # Myz
@@ -140,10 +138,16 @@ def check_regularized_stokeslets_matrix_3d(**kwargs):
 
 
 #TODO: theory of the method have some problem, now.
-def surface_force_matrix_3d(vnodes: np.ndarray,  # nodes contain velocity information
-                            fnodes: np.ndarray,  # nodes contain force information
-                            d_radia: float):  # the radia of the integral surface.
+def surf_force_matrix_3d(obj1: sf.surf_forceObj,  # objct contain velocity information
+                         obj2: sf.surf_forceObj,  # objct contain force information
+                         d_radia: float):            # the radial of the integral surface.
+    # Solve m matrix using surface force distribution method
+    # U = M * F.
+    # details see my notes, 面力分布法
+    # Zhang Ji, 20160928
 
+    vnodes = obj1.get_f_nodes()
+    fnodes = obj2.get_f_nodes()
     n_vnode = vnodes.shape
     if n_vnode[0] < n_vnode[1]:
         vnodes = vnodes.transpose()
@@ -153,33 +157,59 @@ def surface_force_matrix_3d(vnodes: np.ndarray,  # nodes contain velocity inform
         fnodes = fnodes.transpose()
         n_fnode = fnodes.shape
 
-    m = np.zeros((n_vnode[0] * 3, n_fnode[0] * 3))
-    for i0 in range(n_vnode[0]):
-        delta_xi = fnodes - vnodes[i0]
-        temp0 = delta_xi ** 2
-        delta_r2 = temp0.sum(axis=1)  # delta_r2 = r^2
-        delta_r = delta_r2 ** 0.5  # delta_r = r
-        temp1 = 1 / (8 * np.pi * delta_r)
-        temp2 = 1 / (8 * np.pi * delta_r * delta_r2)
-        m[3 * i0, 0::3] = temp1 + delta_xi[:, 0] * delta_xi[:, 0] * temp2  # Mxx
-        m[3 * i0 + 1, 1::3] = temp1 + delta_xi[:, 1] * delta_xi[:, 1] * temp2  # Myy
-        m[3 * i0 + 2, 2::3] = temp1 + delta_xi[:, 2] * delta_xi[:, 2] * temp2  # Mzz
-        m[3 * i0, 1::3] = delta_xi[:, 0] * delta_xi[:, 1] * temp2  # Mxy
-        m[3 * i0, 2::3] = delta_xi[:, 0] * delta_xi[:, 2] * temp2  # Mxz
-        m[3 * i0 + 1, 2::3] = delta_xi[:, 1] * delta_xi[:, 2] * temp2  # Myz
-        m[3 * i0 + 1, 0::3] = m[3 * i0, 1::3]  # Myx
-        m[3 * i0 + 2, 0::3] = m[3 * i0, 2::3]  # Mzx
-        m[3 * i0 + 2, 1::3] = m[3 * i0 + 1, 2::3]  # Mzy
-    for i0 in range(n_vnode[0]):
-        m[3 * i0, 3 * i0] = (1 + np.pi) * np.pi * delta_r ** 2
-        m[3 * i0 + 1, 3 * i0 + 1] = (1 + np.pi) * np.pi * delta_r ** 2
-        m[3 * i0 + 2, 3 * i0 + 2] = np.pi * delta_r ** 2
+    m = PETSc.Mat().create(comm=PETSc.COMM_WORLD)
+    m.setSizes(((None, n_vnode[0]*3), (None, n_fnode[0]*3)))
+    m.setType('dense')
+    m.setFromOptions()
+    m.setUp()
+    m_start, m_end = m.getOwnershipRange()
+    for i0 in range(m_start, m_end):        # interaction between different nodes.
+        delta_xi = fnodes - vnodes[i0//3]   # [delta_x, delta_y, delta_z]
+        temp1 = delta_xi ** 2
+        delta_r2 = temp1.sum(axis = 1)      # r^2
+        if obj1 == obj2:                    # self-interaction will be solved later
+            delta_r2[i0//3] = 1
+        delta_r1 = delta_r2 ** 0.5          # r^1
+        delta_r3 = delta_r2 * delta_r1      # r^3
+        temp2 = 1 / delta_r1                # 1/r
+        if i0 % 3 == 0:       # x axis
+            m[i0, 0::3] = (temp2 + delta_xi[:, 0] * delta_xi[:, 0] / delta_r3) / (8 * np.pi)  # Mxx
+            m[i0, 1::3] = (delta_xi[:, 0] * delta_xi[:, 1] / delta_r3) / (8 * np.pi)  # Mxy
+            m[i0, 2::3] = (delta_xi[:, 0] * delta_xi[:, 2] / delta_r3) / (8 * np.pi)  # Mxz
+        elif i0 % 3 == 1:     # y axis
+            m[i0, 0::3] = (delta_xi[:, 0] * delta_xi[:, 1] / delta_r3) / (8 * np.pi)  # Mxy
+            m[i0, 1::3] = (temp2 + delta_xi[:, 1] * delta_xi[:, 1] / delta_r3) / (8 * np.pi)  # Myy
+            m[i0, 2::3] = (delta_xi[:, 1] * delta_xi[:, 2] / delta_r3) / (8 * np.pi)  # Myz
+        else:     # z axis
+            m[i0, 0::3] = (delta_xi[:, 0] * delta_xi[:, 2] / delta_r3) / (8 * np.pi)  # Mxz
+            m[i0, 1::3] = (delta_xi[:, 1] * delta_xi[:, 2] / delta_r3) / (8 * np.pi)  # Myz
+            m[i0, 2::3] = (temp2 + delta_xi[:, 2] * delta_xi[:, 2] / delta_r3) / (8 * np.pi)  # Mzz
+    if obj1 == obj2:         # self-interaction
+        for i0 in range(m_start, m_end):
+            i1 = i0 //3
+            norm = obj1.get_norm()[i1, :]
+            if i0 % 3 == 0:       # x axis
+                m[i0, i0 + 0] = (3 * np.cos(norm[0]) ** 2 + 1/2 * (5 + np.cos(2 * norm[1])) * np.sin(norm[0]) ** 2) / (8 * np.pi * d_radia)  # Mxx
+                m[i0, i0 + 1] = (np.cos(norm[0]) * np.sin(norm[0]) * np.sin(norm[1]) ** 2) / (8 * np.pi * d_radia)  # Mxy
+                m[i0, i0 + 2] = (-np.cos(norm[1]) * np.sin(norm[0]) * np.sin(norm[1])) / (8 * np.pi * d_radia)  # Mxz
+            elif i0 % 3 == 1:     # y axis
+                m[i0, i0 - 1] = (np.cos(norm[0]) * np.sin(norm[0]) * np.sin(norm[1]) ** 2) / (8 * np.pi * d_radia)  # Mxy
+                m[i0, i0 + 0] = (1/8 * (22 - 2 * np.cos(2 * norm[0]) + np.cos(2 * (norm[0] - norm[1])) + 2 * np.cos(2 * norm[1]) + np.cos(2 * (norm[0] + norm[1])))) / (8 * np.pi * d_radia)  # Myy
+                m[i0, i0 + 1] = (np.cos(norm[0]) * np.cos(norm[1]) * np.sin(norm[1])) / (8 * np.pi * d_radia)  # Myz
+            else:     # z axis
+                m[i0, i0 - 2] = (-np.cos(norm[1]) * np.sin(norm[0]) * np.sin(norm[1])) / (8 * np.pi * d_radia)  # Mxz
+                m[i0, i0 - 1] = (np.cos(norm[0]) * np.cos(norm[1]) * np.sin(norm[1])) / (8 * np.pi * d_radia)  # Myz
+                m[i0, i0 + 0] = (1/2 * (5 - np.cos(2 * norm[1]))) / (8 * np.pi * d_radia)  # Mzz
+    m.assemble()
+    return m  # ' regularized stokeslets matrix, U = M * F '
 
-    return m  # 'regularized stokeslets matrix, U = M * F'
 
-
-def check_surface_force_matrix_3d(**kwargs):
-    if len(kwargs) > 0:
-        ierr = 303
-        err_msg = 'no parameter, is accepted for the surface force stokeslets method. '
+def check_surf_force_matrix_3d(**kwargs):
+    if not ('d_radia' in kwargs):
+        ierr = 301
+        err_msg = 'the surface force method needs parameter, d_radia, the radial of the integral surface. '
+        raise sf_error(ierr, err_msg)
+    if len(kwargs) > 1:
+        ierr = 302
+        err_msg = 'only one parameter, d_radia, is accepted for the reguralized stokeslets method. '
         raise sf_error(ierr, err_msg)

@@ -30,7 +30,12 @@ def sphere(n: int,                  # number of nodes.
     u[:, 1] = sphereU[1] + sphereU[5]*nodes[:, 0] +- sphereU[3]*nodes[:, 2]
     u[:, 2] = sphereU[2] + sphereU[3]*nodes[:, 1] +- sphereU[4]*nodes[:, 0]
 
-    return nodes, u
+    normal = np.zeros((n, 2))       # {Sin[a] Sin[b], -Cos[a] Sin[b], Cos[b]} = {n1, n2, n3} is the normal vector
+    normal_vector = nodes / (nodes[:, 0]**2 + nodes[:, 1]**2 + nodes[:, 2]**2).reshape(n, 1)
+    normal[:, 1] = np.arccos(normal_vector[:, 2])                           # b
+    normal[:, 0] = np.arcsin(normal_vector[:, 0] / np.sin(normal[:, 1]))    # a
+
+    return nodes, u, normal
 
 def tunnel(deltaLength: float,      # length of the mesh
            length: float,           # length of the tunnel
@@ -46,5 +51,11 @@ def tunnel(deltaLength: float,      # length of the mesh
     nodes[:, 0] = np.tile(z, n_a).reshape(n_a, -1).flatten(order='F')
 
     u = np.zeros(nodes.shape)
+    n = u.shape[0]
 
-    return nodes, u
+    normal = np.zeros((n, 2))       # {Sin[a] Sin[b], -Cos[a] Sin[b], Cos[b]} = {n1, n2, n3} is the normal vector
+    normal_vector = -1 * nodes / (nodes[:, 1]**2 + nodes[:, 2]**2).reshape(n, 1)     # -1 means swap direction
+    normal[:, 1] = np.arccos(normal_vector[:, 2])   # b
+    normal[:, 0] = 0                                # a
+
+    return nodes, u, normal
