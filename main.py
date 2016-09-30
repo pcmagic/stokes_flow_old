@@ -45,8 +45,8 @@ def standard_method():
     # problem_arguments = {'method': 'sf'}
 
     t0 = time()
-    problem = sf.StokesFlowProblem()
-    obj1 = sf.StokesFlowObject(filename=filename + '.mat')
+    problem = sf.stokesFlowProblem()
+    obj1 = sf.stokesFlowObject(filename=filename + '.mat')
     obj_list = [obj1]
     problem.add_obj(obj1)
     for i in range(1, n_obj_x * n_obj_y):

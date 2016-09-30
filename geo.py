@@ -40,7 +40,7 @@ def sphere(n: int,                  # number of nodes.
 def tunnel(deltaLength: float,      # length of the mesh
            length: float,           # length of the tunnel
            radius: float):          # radius of the tunnel
-    a = np.arange(0, 2 * np.pi, deltaLength / radius)
+    a = np.arange(0, 2 * np.pi - deltaLength / radius / 2, deltaLength / radius)
     x, y = np.cos(a) * radius, np.sin(a) * radius
     z = np.arange(-length / 2, length / 2, deltaLength)
     n_a, n_z = a.size, z.size

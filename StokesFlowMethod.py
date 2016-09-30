@@ -78,13 +78,14 @@ def regularized_stokeslets_matrix_3d(vnodes: np.ndarray,  # nodes contain veloci
     comm.Gatherv(m_local, [m, split_size_out, split_disp_out, MPI.DOUBLE], root=0)
     return m  # ' regularized stokeslets matrix, U = M * F '
 
-def regularized_stokeslets_matrix_3d_petsc(obj1: sf.StokesFlowObject,  # objct contain velocity information
-                                           obj2: sf.StokesFlowObject,  # objct contain force information
-                                           delta: float):  # correction factor
+def regularized_stokeslets_matrix_3d_petsc(obj1: sf.stokesFlowObject,  # objct contain velocity information
+                                           obj2: sf.stokesFlowObject,  # objct contain force information
+                                           **kwargs):
     # Solve m matrix using regularized stokeslets method
     # U = M * F.
     # Cortez R. The method of regularized Stokeslets[J]. SIAM Journal on Scientific Computing, 2001, 23(4): 1204-1225.
 
+    delta = kwargs['delta']           # correction factor
     vnodes = obj1.get_f_nodes()
     fnodes = obj2.get_f_nodes()
     n_vnode = vnodes.shape
@@ -110,17 +111,17 @@ def regularized_stokeslets_matrix_3d_petsc(obj1: sf.StokesFlowObject,  # objct c
         delta_r3 = delta_r2 * np.sqrt(delta_r2)  # delta_r3 = (r^2+e^2)^1.5
         temp2 = (delta_r2 + delta_2) / delta_r3  # temp2 = (r^2+2*e^2)/(r^2+e^2)^1.5
         if i0 % 3 == 0:       # x axis
-            m[i0, 0::3] = temp2 + np.square(delta_xi[:, 0]) / delta_r3  # Mxx
-            m[i0, 1::3] = delta_xi[:, 0] * delta_xi[:, 1] / delta_r3  # Mxy
-            m[i0, 2::3] = delta_xi[:, 0] * delta_xi[:, 2] / delta_r3  # Mxz
+            m[i0, 0::3] = ( temp2 + np.square(delta_xi[:, 0]) / delta_r3 ) / (8 * np.pi)  # Mxx
+            m[i0, 1::3] = delta_xi[:, 0] * delta_xi[:, 1] / delta_r3 / (8 * np.pi)    # Mxy
+            m[i0, 2::3] = delta_xi[:, 0] * delta_xi[:, 2] / delta_r3 / (8 * np.pi)    # Mxz
         elif i0 % 3 == 1:     # y axis
-            m[i0, 0::3] = delta_xi[:, 0] * delta_xi[:, 1] / delta_r3  # Mxy
-            m[i0, 1::3] = temp2 + np.square(delta_xi[:, 1]) / delta_r3  # Myy
-            m[i0, 2::3] = delta_xi[:, 1] * delta_xi[:, 2] / delta_r3  # Myz
+            m[i0, 0::3] = delta_xi[:, 0] * delta_xi[:, 1] / delta_r3 / (8 * np.pi)    # Mxy
+            m[i0, 1::3] = ( temp2 + np.square(delta_xi[:, 1]) / delta_r3 ) / (8 * np.pi)  # Myy
+            m[i0, 2::3] = delta_xi[:, 1] * delta_xi[:, 2] / delta_r3 / (8 * np.pi)    # Myz
         else:     # z axis
-            m[i0, 0::3] = delta_xi[:, 0] * delta_xi[:, 2] / delta_r3  # Mxz
-            m[i0, 1::3] = delta_xi[:, 1] * delta_xi[:, 2] / delta_r3  # Myz
-            m[i0, 2::3] = temp2 + np.square(delta_xi[:, 2]) / delta_r3  # Mzz
+            m[i0, 0::3] = delta_xi[:, 0] * delta_xi[:, 2] / delta_r3 / (8 * np.pi)    # Mxz
+            m[i0, 1::3] = delta_xi[:, 1] * delta_xi[:, 2] / delta_r3 / (8 * np.pi)    # Myz
+            m[i0, 2::3] = ( temp2 + np.square(delta_xi[:, 2]) / delta_r3 ) / (8 * np.pi)  # Mzz
     m.assemble()
 
     return m  # ' regularized stokeslets matrix, U = M * F '
@@ -131,21 +132,17 @@ def check_regularized_stokeslets_matrix_3d(**kwargs):
         ierr = 301
         err_msg = 'the reguralized stokeslets method needs parameter, delta. '
         raise sf_error(ierr, err_msg)
-    if len(kwargs) > 1:
-        ierr = 302
-        err_msg = 'only one parameter, delta, is accepted for the reguralized stokeslets method. '
-        raise sf_error(ierr, err_msg)
 
 
-#TODO: theory of the method have some problem, now.
 def surf_force_matrix_3d(obj1: sf.surf_forceObj,  # objct contain velocity information
                          obj2: sf.surf_forceObj,  # objct contain force information
-                         d_radia: float):            # the radial of the integral surface.
+                         **kwargs):
     # Solve m matrix using surface force distribution method
     # U = M * F.
     # details see my notes, 面力分布法
     # Zhang Ji, 20160928
 
+    d_radia = kwargs['d_radia']       # the radial of the integral surface.
     vnodes = obj1.get_f_nodes()
     fnodes = obj2.get_f_nodes()
     n_vnode = vnodes.shape
@@ -201,6 +198,12 @@ def surf_force_matrix_3d(obj1: sf.surf_forceObj,  # objct contain velocity infor
                 m[i0, i0 - 1] = (np.cos(norm[0]) * np.cos(norm[1]) * np.sin(norm[1])) / (8 * np.pi * d_radia)  # Myz
                 m[i0, i0 + 0] = (1/2 * (5 - np.cos(2 * norm[1]))) / (8 * np.pi * d_radia)  # Mzz
     m.assemble()
+    # import matplotlib.pyplot as plt
+    # M = m.getDenseArray()
+    # fig, ax = plt.subplots()
+    # cax = ax.matshow(M, origin='lower')
+    # fig.colorbar(cax)
+    # plt.show()
     return m  # ' regularized stokeslets matrix, U = M * F '
 
 
@@ -208,8 +211,4 @@ def check_surf_force_matrix_3d(**kwargs):
     if not ('d_radia' in kwargs):
         ierr = 301
         err_msg = 'the surface force method needs parameter, d_radia, the radial of the integral surface. '
-        raise sf_error(ierr, err_msg)
-    if len(kwargs) > 1:
-        ierr = 302
-        err_msg = 'only one parameter, d_radia, is accepted for the reguralized stokeslets method. '
         raise sf_error(ierr, err_msg)

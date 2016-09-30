@@ -8,7 +8,7 @@ from evtk.hl import pointsToVTK, gridToVTK
 from petsc4py import PETSc
 from sf_error import sf_error
 
-class StokesFlowProblem:
+class stokesFlowProblem:
     def __init__(self):
         self._obj_list = []  # contain objects
         self._n_obj = 0  # number of objects.
@@ -27,15 +27,15 @@ class StokesFlowProblem:
 
         import StokesFlowMethod
         self._method_dict = {'sf': StokesFlowMethod.surf_force_matrix_3d,
-                       'rs_petsc': StokesFlowMethod.regularized_stokeslets_matrix_3d_petsc, }
+                       'rs': StokesFlowMethod.regularized_stokeslets_matrix_3d_petsc, }
         self._check_args_dict = {'sf': StokesFlowMethod.check_surf_force_matrix_3d,
-                           'rs_petsc': StokesFlowMethod.check_regularized_stokeslets_matrix_3d, }
+                           'rs': StokesFlowMethod.check_regularized_stokeslets_matrix_3d, }
 
     def add_obj(self, obj):
         """
         Add a new object to the problem.
 
-        :type obj: StokesFlowObject
+        :type obj: stokesFlowObject
         :param obj: added object
         :return: none.
         """
@@ -165,7 +165,7 @@ class StokesFlowProblem:
                      n_grid: np.ndarray):
         """
 
-        :type self: StokesFlowProblem
+        :type self: stokesFlowProblem
         :param self: self
         :type filename: str
         :param filename: output file name.
@@ -217,7 +217,7 @@ class StokesFlowProblem:
         for i0, current_region_x in enumerate(full_region_x):
             [temp_x, temp_y, temp_z] = np.meshgrid(current_region_x, full_region_y, full_region_z, indexing='ij')
             velocity_nodes = np.c_[temp_x.ravel(), temp_y.ravel(), temp_z.ravel()]
-            obj0 = StokesFlowObject()
+            obj0 = stokesFlowObject()
             obj0.set_data(velocity_nodes, velocity_nodes, np.zeros(velocity_nodes.size))
             m_petsc = PETSc.Mat().create(comm=PETSc.COMM_WORLD)
             m_petsc.setSizes(((None, n_para), (None, self._f_index_list[-1])))
@@ -259,6 +259,21 @@ class StokesFlowProblem:
         viewer(self._M_petsc)
         viewer.destroy()
 
+    def viewM(self, **kwargs):
+        import matplotlib.pyplot as plt
+        M = self._M_petsc.getDenseArray()
+        fig, ax = plt.subplots()
+        cax = ax.matshow(M, origin='lower', vmin=-0.15, vmax=0.8)
+        fig.colorbar(cax)
+        method = kwargs['method']
+        plt.title(method)
+        plt.show()
+        pass
+
+    def get_M(self, **kwargs):
+        M = self._M_petsc.getDenseArray().copy()
+        return M
+
     def get_n_f_nodes(self):
         return self._f_node_index_list[-1]
 
@@ -266,7 +281,7 @@ class StokesFlowProblem:
         return self._u_node_index_list[-1]
 
 
-class StokesFlowObject:
+class stokesFlowObject:
     # general class of object, contain general properties of objcet.
     def __init__(self, filename: str = '..'):
         """
@@ -302,18 +317,32 @@ class StokesFlowObject:
         origin = mat_contents['origin'].astype(np.float)
         f_nodes = mat_contents['nodes'].astype(np.float)
         u_nodes = mat_contents['nodes'].astype(np.float)
-        self.set_data(f_nodes, u_nodes, velocity, origin)
+        para = {'origin': origin}
+        self.set_data(f_nodes, u_nodes, velocity, **para)
 
     def set_data(self,
                  f_nodes: np.array,
                  u_nodes: np.array,
                  velocity: np.array,
-                 origin: np.array = np.array([0, 0, 0])):
+                 **kwargs):
+        need_args = [ ]
+        for key in need_args:
+            if not key in kwargs:
+                ierr = 401
+                err_msg = 'information about ' + key + \
+                          ' is nesscery for surface force method. '
+                raise sf_error(ierr, err_msg)
+
+        args = {'origin': np.array([0, 0, 0])}
+        for key, value in args.items():
+            if not key in kwargs:
+                kwargs[key] = args[key]
+
         self._f_nodes = f_nodes
         self._u_nodes = u_nodes
         self._velocity = velocity.reshape(velocity.size)
         self._force = np.zeros(self._f_nodes.size)
-        self._origin = origin
+        self._origin = kwargs['origin']
         self._local_f_nodes = self._f_nodes - self._origin
         self._local_u_nodes = self._u_nodes - self._origin
         self._type = 'general obj'
@@ -378,52 +407,52 @@ class StokesFlowObject:
         return self._velocity.size
 
 
-class surf_forceProblem(StokesFlowProblem):
+class surf_forceProblem(stokesFlowProblem):
     def __repr__(self):
-        return 'dingProblem'
+        return 'surf_forceProblem'
 
-    def create_matrix(self, method, **kwargs):
-        """
+    # def create_matrix(self, method, **kwargs):
+    #     """
+    #
+    #     :rtype: object
+    #     """
+    #     if len(self._obj_list) == 0:
+    #         ierr = 201
+    #         err_msg = 'at least one object is necessary. '
+    #         raise sf_error(ierr, err_msg)
+    #
+    #     # set method.
+    #     self._method = method
+    #     self._check_args_dict[method](**kwargs)
+    #     self._kwargs = kwargs
+    #
+    #     # processing velocity
+    #     self._velocity = np.ones([self._f_index_list[-1]])
+    #     for i, obj in enumerate(self._obj_list):
+    #         self._velocity[self._f_index_list[i]:self._f_index_list[i + 1]] \
+    #             = obj.get_velocity()
+    #
+    #     # create matrix
+    #     self._M_petsc.setSizes(((None, self._f_index_list[-1]), (None, self._f_index_list[-1])))
+    #     self._M_petsc.setType('dense')
+    #     self._M_petsc.setFromOptions()
+    #     self._M_petsc.setUp()
+    #     for i, obj1 in enumerate(self._obj_list):
+    #         velocity_index_begin = self._f_index_list[i]
+    #         for j, obj2 in enumerate(self._obj_list):
+    #             force_index_begin = self._f_index_list[j]
+    #             force_index_end = self._f_index_list[j + 1]
+    #             temp_m_petsc = self._method_dict[method](obj1, obj2, **kwargs)
+    #             temp_m = temp_m_petsc.getDenseArray()
+    #             temp_m_start, temp_m_end = temp_m_petsc.getOwnershipRange()
+    #             for k in range(temp_m_start, temp_m_end):
+    #                 self._M_petsc.setValues(velocity_index_begin + k,
+    #                                         np.arange(force_index_begin, force_index_end, dtype='int32'),
+    #                                         temp_m[k - temp_m_start, :])
+    #     self._M_petsc.assemble()
 
-        :rtype: object
-        """
-        if len(self._obj_list) == 0:
-            ierr = 201
-            err_msg = 'at least one object is necessary. '
-            raise sf_error(ierr, err_msg)
 
-        # set method.
-        self._method = method
-        self._check_args_dict[method](**kwargs)
-        self._kwargs = kwargs
-
-        # processing velocity
-        self._velocity = np.ones([self._f_index_list[-1]])
-        for i, obj in enumerate(self._obj_list):
-            self._velocity[self._f_index_list[i]:self._f_index_list[i + 1]] \
-                = obj.get_velocity()
-
-        # create matrix
-        self._M_petsc.setSizes(((None, self._f_index_list[-1]), (None, self._f_index_list[-1])))
-        self._M_petsc.setType('dense')
-        self._M_petsc.setFromOptions()
-        self._M_petsc.setUp()
-        for i, obj1 in enumerate(self._obj_list):
-            velocity_index_begin = self._f_index_list[i]
-            for j, obj2 in enumerate(self._obj_list):
-                force_index_begin = self._f_index_list[j]
-                force_index_end = self._f_index_list[j + 1]
-                temp_m_petsc = self._method_dict[method](obj1, obj2, **kwargs)
-                temp_m = temp_m_petsc.getDenseArray()
-                temp_m_start, temp_m_end = temp_m_petsc.getOwnershipRange()
-                for k in range(temp_m_start, temp_m_end):
-                    self._M_petsc.setValues(velocity_index_begin + k,
-                                            np.arange(force_index_begin, force_index_end, dtype='int32'),
-                                            temp_m[k - temp_m_start, :])
-        self._M_petsc.assemble()
-
-
-class surf_forceObj(StokesFlowObject):
+class surf_forceObj(stokesFlowObject):
     def __init__(self, filename: str = '..'):
         super(surf_forceObj, self).__init__(filename)
         self._norm = np.nan  # information about normal vector at each point.
@@ -441,16 +470,30 @@ class surf_forceObj(StokesFlowObject):
         f_nodes = mat_contents['nodes'].astype(np.float)
         u_nodes = mat_contents['nodes'].astype(np.float)
         norm = mat_contents['norm'].astype(np.float)
-        self.set_data(f_nodes, u_nodes, velocity, norm, origin)
+        para = {'norm': norm,
+                'origin': origin}
+        self.set_data(f_nodes, u_nodes, velocity, **para)
 
     def set_data(self,
                  f_nodes: np.array,
                  u_nodes: np.array,
                  velocity: np.array,
-                 norm: np.array,
-                 origin: np.array = np.array([0, 0, 0])):
-        super(surf_forceObj, self).set_data(f_nodes, u_nodes, velocity, origin)
-        self._norm = norm
+                 **kwargs):
+        need_args = ('norm', )
+        for key in need_args:
+            if not key in kwargs:
+                ierr = 401
+                err_msg = 'information about ' + key + \
+                          ' is nesscery for surface force method. '
+                raise sf_error(ierr, err_msg)
+
+        args = {'origin': np.array([0, 0, 0])}
+        for key, value in args.items():
+            if not key in kwargs:
+                kwargs[key] = args[key]
+
+        super(surf_forceObj, self).set_data(f_nodes, u_nodes, velocity, **kwargs)
+        self._norm = kwargs['norm']
 
     def get_norm(self):
         return self._norm
