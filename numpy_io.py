@@ -14,7 +14,7 @@ def write_vector(vector: np.ndarray,
     # write vector
 
     n_vector = vector.shape
-    # TODO report error if len(n_vector) ~= 1, 2
+    # TODO: report error if len(n_vector) ~= 1, 2
     if len(n_vector) == 2:
         if n_vector[1] > n_vector[0]:
             vector = vector.transpose()
